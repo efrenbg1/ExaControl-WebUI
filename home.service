@@ -6,7 +6,7 @@ After=network.target
 User=root
 WorkingDirectory=/var/www/home
 Environment="PATH=/root"
-ExecStart=/usr/local/bin/python3.8 app.py
+ExecStart=/usr/local/bin/gunicorn --bind 0.0.0.0:5000 app:app
 Restart=always
 Type=idle
 

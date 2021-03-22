@@ -1,15 +1,23 @@
 from flask import Flask, redirect, send_from_directory, request
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from mqtls import mqtls
 import json
 import traceback
 import secret
 
 app = Flask(__name__)
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
 
 broker = mqtls()
 
 
 @app.route('/update')
+@limiter.limit("2/second")
 def update():
     if request.headers.get('secret') != secret.cookie:
         return "401 (Unauthorized)", 401
@@ -27,6 +35,7 @@ def update():
 
 
 @app.route('/set')
+@limiter.limit("2/second")
 def set():
     if request.headers.get('secret') != secret.cookie:
         return "401 (Unauthorized)", 401
@@ -71,6 +80,9 @@ def catch(e):
     }
     return json.dumps(response), 500
 
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return "429 (Too Many Requests)", 429
 
 if __name__ == '__main__':
     app.run()
