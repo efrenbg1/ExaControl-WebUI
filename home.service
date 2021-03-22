@@ -1,0 +1,14 @@
+[Unit]
+Description=home.boyarizo.es
+After=network.target
+
+[Service]
+User=root
+WorkingDirectory=/var/www/home
+Environment="PATH=/root"
+ExecStart=/usr/local/bin/python3.8 app.py
+Restart=always
+Type=idle
+
+[Install]
+WantedBy=multi-user.target

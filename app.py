@@ -6,8 +6,7 @@ import secret
 
 app = Flask(__name__)
 
-broker = mqtls("rmote.app", port=2443, user=secret.user,
-               pw=secret.pw)
+broker = mqtls()
 
 
 @app.route('/update')
