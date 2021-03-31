@@ -1,14 +1,17 @@
 [Unit]
-Description=home.boyarizo.es
+Description=ExaControl WebUI service
 After=network.target
 
 [Service]
+Type=notify
 User=root
-WorkingDirectory=/var/www/home
+WorkingDirectory=/var/www/ExaControl-WebUI
 Environment="PATH=/root"
-ExecStart=/usr/local/bin/python3.8 app.py
-Restart=always
-Type=idle
+ExecStart=/usr/local/bin/gunicorn --bind 127.0.0.1:5000 app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
