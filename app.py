@@ -1,12 +1,16 @@
-from flask import Flask, redirect, send_from_directory, request
+from flask import Flask, redirect, send_from_directory, request, render_template, Response
 from mqtls import mqtls
 import json
 import traceback
 import secret
+import checksumdir
+import os
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder="static")
 
 broker = mqtls()
+
+hash = checksumdir.dirhash(os.path.join(os.getcwd(), 'static'))[0:4]
 
 
 @app.route('/update')
@@ -50,7 +54,12 @@ def static_files(path):
 
 @app.route('/')
 def index():
-    return send_from_directory('static/', 'index.html')
+    return render_template('index.html', hash=hash)
+
+
+@app.route('/sw.js')
+def sw():
+    return Response(render_template('sw.js', hash=hash, prevent="/update"), mimetype='application/javascript')
 
 
 @app.route('/index.html')
@@ -60,17 +69,15 @@ def redirectNoFile():
 
 @app.errorhandler(404)
 def not_found(e):
-    redirect('/')
+    return redirect('/')
 
 
 @app.errorhandler(Exception)
 def catch(e):
     print(traceback.print_exc())
-    response = {
-        "error": str(e)
-    }
-    return json.dumps(response), 500
+    return "500 (Internal Server Error)", 500
 
 
 if __name__ == '__main__':
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.run()
