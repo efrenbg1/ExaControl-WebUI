@@ -17,12 +17,19 @@ self.addEventListener('fetch', e => {
     e.respondWith((async () => {
         const r = await caches.match(e.request);
         if (r) { return r; }
-        const response = await fetch(e.request);
-        if (e.request.destination != "") {
-            const cache = await caches.open("{{ hash }}");
-            console.log(`[Service Worker] Caching new resource: ${e.request.url}`);
-            cache.put(e.request, response.clone());
-        }
-        return response;
+        return fetch(e.request)
+            .then(function (response) {
+                if (e.request.destination != "") {
+                    return caches.open("{{ hash }}")
+                        .then(function (cache) {
+                            console.log(`[Service Worker] Caching new resource: ${e.request.url}`);
+                            cache.put(e.request, response.clone());
+                            return response;
+                        });
+                } else {
+                    return response;
+                }
+            })
+            .catch(function (err) { console.log(err) });
     })());
 });
