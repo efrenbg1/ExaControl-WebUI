@@ -7,6 +7,19 @@ var htmlONtime = document.getElementById('ONtime');
 var htmlOFFtime = document.getElementById('OFFtime');
 var timeoutUpdate;
 
+Date.prototype.stdTimezoneOffset = function () {
+    var jan = new Date(this.getFullYear(), 0, 1);
+    var jul = new Date(this.getFullYear(), 6, 1);
+    return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+}
+
+Date.prototype.isDstObserved = function () {
+    return this.getTimezoneOffset() < this.stdTimezoneOffset();
+}
+
+var today = new Date();
+var summertime = today.isDstObserved();
+
 function update() {
     req('/update', function (response) {
         // Temp
@@ -67,9 +80,23 @@ function convertTime(i) {
     i = parseInt(i);
     var hour = parseInt(i / 60);
     var minutes = i - hour * 60;
+    if (summertime) {
+        hour += 1
+        if (hour > 23) hour = 0;
+    }
     if (hour < 10) hour = "0" + hour;
     if (minutes < 10) minutes = "0" + minutes;
     return hour + ":" + minutes;
+}
+
+function unconvertTime(i) {
+    i = i.split(':');
+    i = parseInt(i[0]) * 60 + parseInt(i[1]);
+    if (summertime) {
+        i -= 60;
+        if (i < 0) i += 24 * 60
+    }
+    return i;
 }
 
 var timeoutONtemp;
@@ -96,7 +123,7 @@ function changeONtemp(i) {
     timeoutONtemp = setTimeout(function () {
         req(url, function (response) {
             if (response["done"]) {
-                timeoutUpdate = setTimeout(update, 500);
+                timeoutUpdate = setTimeout(update, 1000);
             } else {
                 alert(response);
             }
@@ -128,7 +155,7 @@ function changeOFFtemp(i) {
     timeoutOFFtemp = setTimeout(function () {
         req(url, function (response) {
             if (response["done"]) {
-                timeoutUpdate = setTimeout(update, 500);
+                timeoutUpdate = setTimeout(update, 1000);
             } else {
                 alert(response);
             }
@@ -145,8 +172,7 @@ function changeONtime(i) {
     var value = htmlONtime.value;
 
     if (value != "") {
-        value = value.split(':');
-        value = parseInt(value[0]) * 60 + parseInt(value[1]);
+        value = unconvertTime(value);
     }
 
     url = "/set?key=4&value=" + value;
@@ -154,7 +180,7 @@ function changeONtime(i) {
     timeoutONtime = setTimeout(function () {
         req(url, function (response) {
             if (response["done"]) {
-                timeoutUpdate = setTimeout(update, 500);
+                timeoutUpdate = setTimeout(update, 1000);
             } else {
                 alert(response);
             }
@@ -171,8 +197,7 @@ function changeOFFtime(i) {
     var value = htmlOFFtime.value;
 
     if (value != "") {
-        value = value.split(':');
-        value = parseInt(value[0]) * 60 + parseInt(value[1]);
+        value = unconvertTime(value);
     }
 
     url = "/set?key=5&value=" + value;
@@ -180,7 +205,7 @@ function changeOFFtime(i) {
     timeoutOFFtime = setTimeout(function () {
         req(url, function (response) {
             if (response["done"]) {
-                timeoutUpdate = setTimeout(update, 500);
+                timeoutUpdate = setTimeout(update, 1000);
             } else {
                 alert(response);
             }

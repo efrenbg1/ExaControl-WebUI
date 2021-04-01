@@ -137,10 +137,22 @@
             </div>
         </div>
     </div>
+    <div class="fixed-bottom d-flex justify-content-center">
+        <small>{{ hash }}</small>
+    </div>
 </body>
 <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js?{{ hash }}');
+    if ('serviceWorker' in navigator && !window.location.host.includes("localhost")) {
+        var refreshing;
+        navigator.serviceWorker.addEventListener('controllerchange',
+            function () {
+                if (refreshing) return;
+                refreshing = true;
+                alert("Se ha instalado la última actualización. Se recargará la página para completar la instalación");
+                window.location.reload();
+            }
+        );
+        navigator.serviceWorker.register('/sw.js');
     }
 </script>
 <script src="index.js?{{ hash }}"></script>

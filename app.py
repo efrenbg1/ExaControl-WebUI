@@ -21,7 +21,7 @@ hash = checksumdir.dirhash(os.path.join(os.getcwd(), 'static'))[0:4]
 
 
 @app.route('/update')
-@limiter.limit("2/second")
+@limiter.limit("5/second")
 def update():
     if request.headers.get('secret') != secret.cookie:
         return "401 (Unauthorized)", 401
@@ -68,7 +68,7 @@ def index():
 
 @app.route('/sw.js')
 def sw():
-    return Response(render_template('sw.js', hash=hash, prevent="/update"), mimetype='application/javascript')
+    return Response(render_template('sw.js', hash=hash), mimetype='application/javascript')
 
 
 @app.route('/index.html')
